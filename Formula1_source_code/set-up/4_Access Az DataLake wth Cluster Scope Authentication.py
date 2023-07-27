@@ -10,7 +10,7 @@
 # MAGIC %md
 # MAGIC 1. Edited the cluster configuration with the spark configuration in a name-value pair setup
 # MAGIC 1. name: fs.azure.account.key.formula1deltalke.dfs.core.windows.net
-# MAGIC 1. value: GThgPm6gppRmL8ErJxYuY1LVD9BNrThxROj2EH9+q8pCnwGEnrbPwMsAr0h4wqMiqc7hB/hGFhw2+ASt64f1eA==
+# MAGIC 1. value: Azure-storage-account-key
 
 # COMMAND ----------
 

@@ -8,9 +8,9 @@
 
 # COMMAND ----------
 
-client_id = "c11b4f5e-67e5-4b50-bd24-af321a5ffdec"
-tenant_id = "9296ed31-496c-49f5-8533-e22aa5c4cb15"
-client_secret = "rRO8Q~H2LiInY8saIlS2lrtKr-KiNMTTYdqakaj."
+client_id = "client_id_of_service_principal"
+tenant_id = "tenant_id_of_service_principal"
+client_secret = "client_secret_of_service_principal"
 
 # COMMAND ----------
 
