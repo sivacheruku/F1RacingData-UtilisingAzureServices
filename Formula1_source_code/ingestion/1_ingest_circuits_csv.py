@@ -31,7 +31,7 @@ v_file_date = dbutils.widgets.get('p_file_date')
 # COMMAND ----------
 
 #checking whether the %run worked or not
-print(raw_folder_path)
+# print(raw_folder_path)
 
 # COMMAND ----------
 
@@ -111,15 +111,15 @@ circuits_final_df = add_ingestion_date(renamed_cols_circuits_df)
 
 # COMMAND ----------
 
-display(circuits_final_df)
+# display(circuits_final_df)
 
 # COMMAND ----------
 
-circuits_final_df.write.mode('overwrite').format('parquet').saveAsTable('f1_processed.circuits')
+circuits_final_df.write.mode('overwrite').format('delta').saveAsTable('f1_processed.circuits')
 
 # COMMAND ----------
 
-display(spark.read.parquet(f'/mnt/formula1deltalke/processed/circuits'))
+# display(spark.read.parquet(f'/mnt/formula1deltalke/processed/circuits'))
 
 # COMMAND ----------
 

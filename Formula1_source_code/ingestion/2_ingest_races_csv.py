@@ -46,13 +46,13 @@ races_schema = StructType(fields = [
 
 #read races.csv
 races_df = spark.read.option('header',True).schema(races_schema).csv(f'{raw_folder_path}/{v_file_date}/races.csv')
-display(races_df)
-races_df.printSchema()
+# display(races_df)
+# races_df.printSchema()
 
 # COMMAND ----------
 
 renamed_cols_races_df = races_df.withColumnsRenamed({'raceId':'race_id','year':'race_year','circuitId':'circuit_id'}).drop('url')
-display(renamed_cols_races_df)
+# display(renamed_cols_races_df)
 
 # COMMAND ----------
 
@@ -73,12 +73,12 @@ final_df = add_ingestion_date(timestamps_added_races_df)
 
 # COMMAND ----------
 
-display(timestamps_added_races_df)
+# display(timestamps_added_races_df)
 
 # COMMAND ----------
 
 races_final_df = final_df.drop(col('date'),col('time'))
-display(races_final_df)
+# display(races_final_df)
 
 # COMMAND ----------
 
@@ -86,11 +86,11 @@ display(races_final_df)
 
 # COMMAND ----------
 
-races_final_df.write.mode('overwrite').format('parquet').saveAsTable('f1_processed.races')
+# races_final_df.write.mode('overwrite').format('delta').saveAsTable('f1_processed.races')
 
 # COMMAND ----------
 
-display(spark.read.parquet('/mnt/formula1deltalke/processed/races'))
+# display(spark.read.parquet('/mnt/formula1deltalke/processed/races'))
 
 # COMMAND ----------
 
@@ -103,7 +103,7 @@ display(spark.read.parquet('/mnt/formula1deltalke/processed/races'))
 
 # COMMAND ----------
 
-races_final_df.write.mode('overwrite').format('parquet').partitionBy('race_year').saveAsTable('f1_processed.races')
+races_final_df.write.mode('overwrite').format('delta').partitionBy('race_year').saveAsTable('f1_processed.races')
 
 # COMMAND ----------
 
@@ -118,3 +118,7 @@ races_final_df.write.mode('overwrite').format('parquet').partitionBy('race_year'
 # COMMAND ----------
 
 dbutils.notebook.exit("Success")
+
+# COMMAND ----------
+
+

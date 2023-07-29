@@ -17,7 +17,7 @@ v_file_date = dbutils.widgets.get('p_file_date')
 
 # COMMAND ----------
 
-race_results_list = spark.read.parquet(f'{presentation_folder_path}/race_results') \
+race_results_list = spark.read.format('delta').load(f'{presentation_folder_path}/race_results') \
     .filter(f"file_date = '{v_file_date}'") \
     .select('race_year') \
     .distinct() \
@@ -32,22 +32,22 @@ for race_year in race_results_list:
 # COMMAND ----------
 
 from pyspark.sql.functions import col
-race_results_df = spark.read.parquet(f'{presentation_folder_path}/race_results') \
+race_results_df = spark.read.format('delta').load(f'{presentation_folder_path}/race_results') \
     .filter(col('race_year').isin(race_year_list))
 
 # COMMAND ----------
 
-display(race_results_df)
+# display(race_results_df)
 
 # COMMAND ----------
 
 from pyspark.sql.functions import sum, count, when, desc
-driver_standings = race_results_df.groupBy('race_year', 'driver_name', 'driver_nationality', 'team') \
+driver_standings = race_results_df.groupBy('race_year', 'driver_name', 'driver_nationality') \
     .agg(sum('points').alias('total_points'), count(when(race_results_df.position == 1, True)).alias('wins'))
 
 # COMMAND ----------
 
-display(driver_standings.where('race_year = 2020').orderBy(desc('total_points')))
+# display(driver_standings.where('race_year = 2020').orderBy(desc('total_points')))
 
 # COMMAND ----------
 
@@ -65,7 +65,7 @@ final_df = driver_standings.withColumn('rank', rank().over(driver_rank_spec))
 
 # COMMAND ----------
 
-display(final_df.where('race_year = 2020'))
+# display(final_df.where('race_year = 2020'))
 
 # COMMAND ----------
 
@@ -77,7 +77,17 @@ display(final_df.where('race_year = 2020'))
 
 # COMMAND ----------
 
-overwrite_partition(final_df, 'f1_presentation', 'driver_standings','race_year')
+# overwrite_partition(final_df, 'f1_presentation', 'driver_standings','race_year')
+
+# COMMAND ----------
+
+merge_condition = "tgt.driver_name = src.driver_name AND tgt.race_year = src.race_year"
+merge_delta_data(final_df, 'f1_presentation', 'driver_standings', presentation_folder_path, merge_condition, 'race_year')
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM f1_presentation.driver_standings
 
 # COMMAND ----------
 

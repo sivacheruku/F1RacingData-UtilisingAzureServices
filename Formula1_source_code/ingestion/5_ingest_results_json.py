@@ -77,7 +77,7 @@ results_final = add_ingestion_date(results)
 
 # COMMAND ----------
 
-display(results_final)
+# display(results_final)
 
 # COMMAND ----------
 
@@ -85,6 +85,10 @@ display(results_final)
 #     .mode('overwrite') \
 #     .partitionBy('race_id') \
 #     .parquet(f'{processed_folder_path}/results')
+
+# COMMAND ----------
+
+results_deduped_df = results_final.dropDuplicates(['race_id','driver_id'])
 
 # COMMAND ----------
 
@@ -115,11 +119,6 @@ display(results_final)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC --DROP TABLE f1_processed.results
-
-# COMMAND ----------
-
 # #We need race_id to be the last column
 # results_final_new = results_final.select('result_id','driver_id','constructor_id','number','grid','position','position_text','position_order','points','laps','time','milliseconds','fastest_lap','rank','fastest_lap_time','fastest_lap_speed','data_source','file_date','ingestion_date','race_id')
 
@@ -131,11 +130,16 @@ display(results_final)
 
 # COMMAND ----------
 
-overwrite_partition(results_final, 'f1_processed', 'results','race_id')
+# overwrite_partition(results_final, 'f1_processed', 'results','race_id')
 
 # COMMAND ----------
 
-display(spark.read.parquet('/mnt/formula1deltalke/processed/results'))
+merge_condition = 'tgt.result_id = src.result_id AND tgt.race_id = src.race_id'
+merge_delta_data(results_deduped_df, 'f1_processed', 'results', '/mnt/formula1deltalke/processed', merge_condition, 'race_id')
+
+# COMMAND ----------
+
+# display(spark.read.parquet('/mnt/formula1deltalke/processed/results'))
 
 # COMMAND ----------
 
@@ -143,6 +147,11 @@ display(spark.read.parquet('/mnt/formula1deltalke/processed/results'))
 # MAGIC SELECT race_id, count(*) FROM f1_processed.results
 # MAGIC   GROUP BY race_id
 # MAGIC   ORDER BY race_id DESC;
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESCRIBE HISTORY f1_processed.results
 
 # COMMAND ----------
 

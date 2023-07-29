@@ -25,7 +25,7 @@ v_file_date = dbutils.widgets.get('p_file_date')
 # COMMAND ----------
 
 def read_df_from_processed(processed_folder_path, folder_name):
-    return spark.read.parquet(f'{processed_folder_path}/{folder_name}')
+    return spark.read.format('delta').load(f'{processed_folder_path}/{folder_name}')
 
 # COMMAND ----------
 
@@ -72,7 +72,23 @@ display(final_df.filter("race_name = 'Abu Dhabi Grand Prix' and race_year = 2020
 
 # COMMAND ----------
 
-overwrite_partition(final_df, 'f1_presentation', 'race_results','race_id')
+# overwrite_partition(final_df, 'f1_presentation', 'race_results','race_id')
+
+# COMMAND ----------
+
+merge_condition = "tgt.driver_name = src.driver_name AND tgt.race_id = src.race_id"
+merge_delta_data(final_df, 'f1_presentation', 'race_results', presentation_folder_path, merge_condition, 'race_id')
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM f1_presentation.race_results
+# MAGIC WHERE race_year = 2021
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESCRIBE HISTORY f1_presentation.race_results
 
 # COMMAND ----------
 

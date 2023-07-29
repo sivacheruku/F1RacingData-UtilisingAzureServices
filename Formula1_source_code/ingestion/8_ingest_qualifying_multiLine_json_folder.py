@@ -63,7 +63,7 @@ qualifying_final = add_ingestion_date(qualifying_final_df)
 
 # COMMAND ----------
 
-display(qualifying_final_df)
+# display(qualifying_final_df)
 
 # COMMAND ----------
 
@@ -77,7 +77,12 @@ display(qualifying_final_df)
 
 # COMMAND ----------
 
-overwrite_partition(qualifying_final, 'f1_processed', 'qualifying','race_id')
+# overwrite_partition(qualifying_final, 'f1_processed', 'qualifying','race_id')
+
+# COMMAND ----------
+
+merge_condition = "tgt.qualify_id = src.qualify_id AND tgt.race_id = src.race_id"
+merge_delta_data(qualifying_final, 'f1_processed', 'qualifying', processed_folder_path, merge_condition, 'race_id')
 
 # COMMAND ----------
 

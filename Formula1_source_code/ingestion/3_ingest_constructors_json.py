@@ -23,7 +23,7 @@ v_file_date = dbutils.widgets.get('p_file_date')
 
 # COMMAND ----------
 
-display(dbutils.fs.mounts())
+# display(dbutils.fs.mounts())
 
 # COMMAND ----------
 
@@ -98,11 +98,11 @@ constructors_final_df2 = add_ingestion_date(constructors_final_df)
 
 # COMMAND ----------
 
-constructors_final_df2.write.mode('overwrite').format('parquet').saveAsTable('f1_processed.constructors')
+constructors_final_df2.write.mode('overwrite').format('delta').saveAsTable('f1_processed.constructors')
 
 # COMMAND ----------
 
-display(spark.read.parquet('/mnt/formula1deltalke/processed/constructors/'))
+# display(spark.read.parquet('/mnt/formula1deltalke/processed/constructors/'))
 
 # COMMAND ----------
 

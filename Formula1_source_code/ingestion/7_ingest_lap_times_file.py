@@ -61,7 +61,7 @@ lap_times = add_ingestion_date(lap_times_final_df)
 
 # COMMAND ----------
 
-display(lap_times)
+# display(lap_times)
 
 # COMMAND ----------
 
@@ -75,7 +75,12 @@ display(lap_times)
 
 # COMMAND ----------
 
-overwrite_partition(lap_times, 'f1_processed', 'lap_times','race_id')
+# overwrite_partition(lap_times, 'f1_processed', 'lap_times','race_id')
+
+# COMMAND ----------
+
+merge_condition = "tgt.race_id = src.race_id AND tgt.driver_id = src.driver_id AND tgt.lap = src.lap AND tgt.race_id = src.race_id"
+merge_delta_data(lap_times, 'f1_processed', 'lap_times', '/mnt/formula1deltalke/processed', merge_condition, 'race_id')
 
 # COMMAND ----------
 
@@ -86,7 +91,7 @@ overwrite_partition(lap_times, 'f1_processed', 'lap_times','race_id')
 
 # COMMAND ----------
 
-display(spark.read.parquet('/mnt/formula1delatalke/processed/lap_times'))
+# display(spark.read.parquet('/mnt/formula1delatalke/processed/lap_times'))
 
 # COMMAND ----------
 

@@ -75,7 +75,12 @@ display(pit_stops_new)
 
 # COMMAND ----------
 
-overwrite_partition(pit_stops_new, 'f1_processed', 'pit_stops','race_id')
+# overwrite_partition(pit_stops_new, 'f1_processed', 'pit_stops','race_id')
+
+# COMMAND ----------
+
+merge_condition = "tgt.race_id = src.race_id AND tgt.driver_id = src.driver_id AND tgt.stop = src.stop AND tgt.race_id = src.race_id"
+merge_delta_data(pit_stops_new, 'f1_processed', 'pit_stops', '/mnt/formula1deltalke/processed', merge_condition, 'race_id')
 
 # COMMAND ----------
 
@@ -86,7 +91,7 @@ overwrite_partition(pit_stops_new, 'f1_processed', 'pit_stops','race_id')
 
 # COMMAND ----------
 
-display(spark.read.parquet('/mnt/formula1delatalke/processed/pit_stops'))
+# display(spark.read.parquet('/mnt/formula1delatalke/processed/pit_stops'))
 
 # COMMAND ----------
 

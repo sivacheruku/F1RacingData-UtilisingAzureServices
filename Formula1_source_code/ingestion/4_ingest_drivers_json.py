@@ -76,11 +76,11 @@ drivers_final = add_ingestion_date(drivers_final_df)
 
 # COMMAND ----------
 
-drivers_final.write.mode('overwrite').format('parquet').saveAsTable('f1_processed.drivers')
+drivers_final.write.mode('overwrite').format('delta').saveAsTable('f1_processed.drivers')
 
 # COMMAND ----------
 
-display(spark.read.parquet('/mnt/formula1deltalke/processed/drivers/'))
+# display(spark.read.parquet('/mnt/formula1deltalke/processed/drivers/'))
 
 # COMMAND ----------
 
