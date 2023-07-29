@@ -9,6 +9,11 @@ v_data_source = dbutils.widgets.get('p_data_source_name')
 
 # COMMAND ----------
 
+dbutils.widgets.text('p_file_date', '2021-03-28')
+v_file_date = dbutils.widgets.get('p_file_date')
+
+# COMMAND ----------
+
 # MAGIC %run "../includes/configuration"
 
 # COMMAND ----------
@@ -40,7 +45,7 @@ pit_stops_schema = StructType(fields = [
 pit_stops_df = spark.read \
     .schema(pit_stops_schema) \
     .option('multiline', True) \
-    .json(f'{raw_folder_path}/pit_stops.json')
+    .json(f'{raw_folder_path}/{v_file_date}/pit_stops.json')
 
 # COMMAND ----------
 
@@ -49,7 +54,8 @@ display(pit_stops_df)
 # COMMAND ----------
 
 from pyspark.sql.functions import current_timestamp,lit
-pit_stops_final_df = pit_stops_df.withColumnsRenamed({'raceId':'race_id','driverId':'driver_id'}).withColumn('data_source', lit(v_data_source))
+pit_stops_final_df = pit_stops_df.withColumnsRenamed({'raceId':'race_id','driverId':'driver_id'}).withColumn('data_source', lit(v_data_source)) \
+    .withColumn('file_date', lit(v_file_date))
 
 # COMMAND ----------
 
@@ -65,12 +71,18 @@ display(pit_stops_new)
 
 # COMMAND ----------
 
-pit_stops_new.write.mode('overwrite').format('parquet').saveAsTable('f1_processed.pit_stops')
+# pit_stops_new.write.mode('overwrite').format('parquet').saveAsTable('f1_processed.pit_stops')
+
+# COMMAND ----------
+
+overwrite_partition(pit_stops_new, 'f1_processed', 'pit_stops','race_id')
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM f1_processed.pit_stops;
+# MAGIC SELECT race_id, count(*) FROM f1_processed.pit_stops
+# MAGIC     GROUP BY race_id
+# MAGIC     ORDER BY race_id DESC;
 
 # COMMAND ----------
 

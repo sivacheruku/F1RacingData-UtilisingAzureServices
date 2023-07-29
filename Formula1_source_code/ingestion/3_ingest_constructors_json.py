@@ -18,6 +18,11 @@ v_data_source = dbutils.widgets.get('p_data_source_name')
 
 # COMMAND ----------
 
+dbutils.widgets.text('p_file_date', '2021-03-21')
+v_file_date = dbutils.widgets.get('p_file_date')
+
+# COMMAND ----------
+
 display(dbutils.fs.mounts())
 
 # COMMAND ----------
@@ -54,7 +59,7 @@ constructors_schema = 'constructorId INT, constructorRef STRING, name STRING, na
 
 constructors_df = spark.read\
                 .schema(constructors_schema) \
-                .json(f'{raw_folder_path}/constructors.json')
+                .json(f'{raw_folder_path}/{v_file_date}/constructors.json')
 
 # COMMAND ----------
 
@@ -76,7 +81,8 @@ constructors_df_processed = constructors_df.drop('url')
 
 from pyspark.sql.functions import current_timestamp, lit
 constructors_final_df = constructors_df_processed.withColumnsRenamed({'constructorId': 'constructor_id', 'constructorRef': 'constructor_ref'}) \
-                                                    .withColumn('data_source', lit(v_data_source))
+.withColumn('data_source', lit(v_data_source)) \
+.withColumn('file_date', lit(v_file_date))
 
 constructors_final_df2 = add_ingestion_date(constructors_final_df)
 

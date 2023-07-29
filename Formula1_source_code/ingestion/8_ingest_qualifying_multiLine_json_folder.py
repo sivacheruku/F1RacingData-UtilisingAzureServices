@@ -9,6 +9,11 @@ v_data_source = dbutils.widgets.get('p_data_source_name')
 
 # COMMAND ----------
 
+dbutils.widgets.text('p_file_date', '2021-03-28')
+v_file_date = dbutils.widgets.get('p_file_date')
+
+# COMMAND ----------
+
 # MAGIC %run "../includes/configuration"
 
 # COMMAND ----------
@@ -38,7 +43,7 @@ qualifying_schema = StructType(fields = [
 qualifying_df = spark.read \
     .schema(qualifying_schema) \
     .option('multiline', True) \
-    .json(f'{raw_folder_path}/qualifying')
+    .json(f'{raw_folder_path}/{v_file_date}/qualifying')
 
 # COMMAND ----------
 
@@ -49,7 +54,8 @@ display(qualifying_df.count())
 from pyspark.sql.functions import current_timestamp, lit
 qualifying_final_df = qualifying_df \
     .withColumnsRenamed({'qualifyId':'qualify_id','raceId':'race_id','driverId':'driver_id', 'constructorId':'constructor_id'}) \
-    .withColumn('data-source', lit(v_data_source))
+    .withColumn('data-source', lit(v_data_source))\
+    .withColumn('file_date', lit(v_file_date))
 
 # COMMAND ----------
 
@@ -67,12 +73,18 @@ display(qualifying_final_df)
 
 # COMMAND ----------
 
-qualifying_final.write.mode('overwrite').format('parquet').saveAsTable('f1_processed.qualifying')
+# qualifying_final.write.mode('overwrite').format('parquet').saveAsTable('f1_processed.qualifying')
+
+# COMMAND ----------
+
+overwrite_partition(qualifying_final, 'f1_processed', 'qualifying','race_id')
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM f1_processed.qualifying;
+# MAGIC SELECT race_id, count(*) FROM f1_processed.qualifying
+# MAGIC   GROUP BY race_id
+# MAGIC   ORDER BY race_id DESC;
 
 # COMMAND ----------
 

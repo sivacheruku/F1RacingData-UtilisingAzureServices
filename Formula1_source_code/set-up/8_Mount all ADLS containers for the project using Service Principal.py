@@ -58,3 +58,11 @@ display(dbutils.fs.mounts())
 
 #unmounting an existing mount
 dbutils.fs.unmount('/mnt/formula1deltalke/demo')
+
+# COMMAND ----------
+
+mount_adls('formula1deltalke','demo')
+
+# COMMAND ----------
+
+

@@ -9,6 +9,11 @@ v_data_source = dbutils.widgets.get('p_data_source_name')
 
 # COMMAND ----------
 
+dbutils.widgets.text('p_file_date', '2021-03-28')
+v_file_date = dbutils.widgets.get('p_file_date')
+
+# COMMAND ----------
+
 # MAGIC %run "../includes/configuration"
 
 # COMMAND ----------
@@ -34,7 +39,7 @@ lap_times_schema = StructType(fields = [
 
 lap_times_df = spark.read \
     .schema(lap_times_schema) \
-    .csv(f'{raw_folder_path}/lap_times')
+    .csv(f'{raw_folder_path}/{v_file_date}/lap_times')
 
 # or .csv('/mnt/formula1deltalke/raw/lap_times/lap_times_split*.csv')
 
@@ -47,7 +52,8 @@ display(lap_times_df.count())
 from pyspark.sql.functions import current_timestamp, lit
 lap_times_final_df = lap_times_df \
     .withColumnsRenamed({'raceId':'race_id','driverId':'driver_id'}) \
-    .withColumn('data_source', lit(v_data_source))
+    .withColumn('data_source', lit(v_data_source)) \
+    .withColumn('file_date', lit(v_file_date))
 
 # COMMAND ----------
 
@@ -65,12 +71,18 @@ display(lap_times)
 
 # COMMAND ----------
 
-lap_times.write.mode('overwrite').format('parquet').saveAsTable('f1_processed.lap_times')
+# lap_times.write.mode('overwrite').format('parquet').saveAsTable('f1_processed.lap_times')
+
+# COMMAND ----------
+
+overwrite_partition(lap_times, 'f1_processed', 'lap_times','race_id')
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM f1_processed.lap_times;
+# MAGIC SELECT race_id, count(*) FROM f1_processed.lap_times
+# MAGIC     GROUP BY race_id
+# MAGIC     ORDER BY race_id DESC;
 
 # COMMAND ----------
 
