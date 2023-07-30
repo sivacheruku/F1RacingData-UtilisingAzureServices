@@ -5,8 +5,17 @@
 		"factoryName": {
 			"value": "databricks-course-f1-data"
 		},
+		"ls_formula1_dl_storage_accountKey": {
+			"value": ""
+		},
 		"ls_databricks_course_ws_properties_typeProperties_existingClusterId": {
 			"value": "0711-224023-h87iyogu"
+		},
+		"ls_formula1_dl_storage_properties_typeProperties_url": {
+			"value": "https://formula1deltalke.dfs.core.windows.net/"
+		},
+		"tr_process_formula1_data_properties_pipeline_parameters_p_window_end_date": {
+			"value": "@trigger().outputs.windowEndTime"
 		},
 		"containerUri": {
 			"value": ""
