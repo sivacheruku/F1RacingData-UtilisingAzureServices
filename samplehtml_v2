@@ -1,113 +1,99 @@
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Chat with Agent</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background-color: #f5f5f5;
-      }
-      h1 {
-        color: #333;
-      }
-      .container {
-        max-width: 600px;
-        margin: auto;
-        background: white;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-      }
-      input[type="text"] {
-        width: calc(100% - 100px);
-        padding: 10px;
-        margin-right: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-      button {
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      button:hover {
-        background-color: #0056b3;
-      }
-      .message-container {
-        border: 1px solid #ddd;
-        padding: 15px;
-        margin-top: 10px;
-        border-radius: 5px;
-        background-color: #f9f9f9;
-      }
-      .message-container p {
-        margin: 5px 0;
-      }
-      .message-container .message-header {
-        font-weight: bold;
-        color: #007bff;
-      }
-    </style>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('query').addEventListener('keydown', function(event) {
-          if (event.key === 'Enter') {
-            triggerEndpoint();
-          }
-        });
-      });
+from typing_extensions import Annotated
+import requests
+from bs4 import BeautifulSoup
+import autogen
+from autogen.cache import Cache
 
-      function triggerEndpoint() {
-        var query = document.getElementById('query').value;
-        var resultDiv = document.getElementById('result');
-        resultDiv.innerHTML = '<p>Loading...</p>';  // Show loading message
-        
-        fetch('/run?query=' + query)
-          .then(response => response.json())
-          .then(data => {
-            resultDiv.innerHTML = '';  // Clear loading message
-            data.forEach(entry => {
-              var messageContainer = document.createElement('div');
-              messageContainer.className = 'message-container';
-              
-              var queryP = document.createElement('p');
-              queryP.innerHTML = '<span class="message-header">Query:</span> ' + entry['Query'];
-              var agentP = document.createElement('p');
-              agentP.innerHTML = '<span class="message-header">Agent:</span> ' + entry['Agent'];
-              var toolResponseP = document.createElement('p');
-              toolResponseP.innerHTML = '<span class="message-header">Tool Response:</span> ' + entry['Tool Response'];
-              var citationsP = document.createElement('p');
-              citationsP.innerHTML = '<span class="message-header">Citations:</span> ' + entry['Citations'];
-              var agentSummaryP = document.createElement('p');
-              agentSummaryP.innerHTML = '<span class="message-header">Agent Summary:</span> ' + entry['Agent Summary'];
-              
-              messageContainer.appendChild(queryP);
-              messageContainer.appendChild(agentP);
-              messageContainer.appendChild(toolResponseP);
-              messageContainer.appendChild(citationsP);
-              messageContainer.appendChild(agentSummaryP);
-              
-              resultDiv.appendChild(messageContainer);
-            });
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            resultDiv.innerHTML = '<p>Error processing request.</p>';
-          });
-      }
-    </script>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Enter question</h1>
-      <input type="text" id="query" placeholder="Enter Query">
-      <button onclick="triggerEndpoint()">Send</button>
-      <div id="result"></div>
-    </div>
-  </body>
-</html>
+# config_list = autogen.config_list_from_json(
+#     "OAI_CONFIG_LIST",
+#     filter_dict={"tags": ["gemini", "tool"]}
+# )
+config_list = [
+    {
+        'model': 'gemini-1.5-pro',
+        'api_key': 'AIzaSyA2zXT6GX0MMi7mCj1er-6B9FJNssfZ1kA',
+        'api_type': 'google',
+        'tags': ['tool', 'gemini'],
+    },
+    {
+        'model': 'gemini-1.5-flash',
+        'api_key': 'AIzaSyA2zXT6GX0MMi7mCj1er-6B9FJNssfZ1kA',
+        'api_type': 'google',
+        'tags': ['tool', 'gemini'],
+    }
+]
+
+llm_config = {
+    "config_list": config_list,
+    "timeout": 120,
+}
+chatbot = autogen.AssistantAgent(
+    name="chatbot",
+    system_message="For coding tasks, only use the functions you have been provided with. Reply TERMINATE when the task is done.",
+    llm_config=llm_config,
+)
+
+# create a UserProxyAgent instance named "user_proxy"
+user_proxy = autogen.UserProxyAgent(
+    name="user_proxy",
+    is_termination_msg=lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE"),
+    human_input_mode="NEVER",
+    max_consecutive_auto_reply=10,
+    code_execution_config={
+        "work_dir": "coding",
+        "use_docker": False,
+    },  # Please set use_docker=True if docker is available to run the generated code. Using docker is safer than running the generated code directly.
+)
+
+
+# define functions according to the function description
+
+
+# one way of registering functions is to use the register_for_llm and register_for_execution decorators
+@user_proxy.register_for_execution()
+@chatbot.register_for_llm(name="python", description="print out the titles and URLs of datasets listed on the main dataset catalog page")
+def list_datasets(url: Annotated[str, "Valid url to request/ scrape data frm"]) -> str:
+    print(1000*"-")
+    print("list_datasets is being called")
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    result = ""
+
+    for dataset in soup.find_all('h3', class_='dataset-heading'):
+        a_tag = dataset.find('a')
+        title = a_tag.text.strip()
+        link = a_tag['href']
+        result = result + f"\nTitle: {title}\nLink: {link}\n"
+    return result
+# def exec_python(cell: Annotated[str, "Valid Python cell to execute."]) -> str:
+#     ipython = get_ipython()
+#     result = ipython.run_cell(cell)
+#     log = str(result.result)
+#     if result.error_before_exec is not None:
+#         log += f"\n{result.error_before_exec}"
+#     if result.error_in_exec is not None:
+#         log += f"\n{result.error_in_exec}"
+#     return log
+
+
+# another way of registering functions is to use the register_function
+def exec_sh(script: Annotated[str, "Valid Python cell to execute."]) -> str:
+    return user_proxy.execute_code_blocks([("sh", script)])
+
+
+autogen.agentchat.register_function(
+    list_datasets,
+    caller=chatbot,
+    executor=user_proxy,
+    name="sh",
+    description="run a shell script and return the execution result.",
+)
+
+with Cache.disk() as cache:
+    # start the conversation
+    user_proxy.initiate_chat(
+        chatbot,
+        message="Run the 'list_datasets' function and tell me which datasets would be useful for someone who wants to write an article about public health 'https://catalog.data.gov/dataset' is the url",
+        cache=cache,
+        max_turns=3,
+    )
